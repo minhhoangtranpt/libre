@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mô Phỏng Bida Libre Trực Quan</title>
+    <title>Sa Bàn Phân Tích Bida Libre</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -52,40 +52,13 @@
             color: white;
             border-color: #2563eb;
         }
-        
-        /* Tùy chỉnh thanh kéo lực */
-        #shoot-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            background: transparent;
-        }
-        #shoot-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 24px;
-            height: 40px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            cursor: ew-resize;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            border: 2px solid #475569;
-        }
-        #shoot-slider::-moz-range-thumb {
-            width: 24px;
-            height: 40px;
-            background: #e2e8f0;
-            border-radius: 4px;
-            cursor: ew-resize;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            border: 2px solid #475569;
-        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-4 font-sans">
 
     <header class="mb-6 text-center">
-        <h1 class="text-3xl font-bold text-white mb-2"><i class="fa-solid fa-bowling-ball mr-2 text-blue-400"></i> Bida Libre Mô Phỏng</h1>
-        <p class="text-gray-400 text-sm">Tương tác để xếp bi, chỉnh ép-phê và ngắm quỹ đạo đường đi</p>
+        <h1 class="text-3xl font-bold text-white mb-2"><i class="fa-solid fa-route mr-2 text-blue-400"></i> Sa Bàn Phân Tích Bida Libre</h1>
+        <p class="text-gray-400 text-sm">Xếp bi, đặt ép-phê và tự do rà chuột để xem quỹ đạo hình học</p>
     </header>
 
     <div class="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto w-full">
@@ -93,12 +66,13 @@
             <div id="game-container">
                 <canvas id="billiard-table" width="1000" height="540"></canvas>
             </div>
+            
             <div class="mt-4 flex gap-4 w-full max-w-[1000px] justify-center lg:justify-start">
                 <button id="btn-undo" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
-                    <i class="fa-solid fa-rotate-left mr-1"></i> Đặt lại bóng
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Đặt lại thế bi
                 </button>
                 <button id="btn-clear-path" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
-                    <i class="fa-solid fa-eraser mr-1"></i> Xóa quỹ đạo
+                    <i class="fa-solid fa-eye-slash mr-1"></i> Tạm ẩn quỹ đạo
                 </button>
             </div>
         </div>
@@ -106,23 +80,16 @@
         <div class="w-full lg:w-80 bg-gray-800 rounded-xl p-5 shadow-xl flex flex-col gap-6 flex-shrink-0">
             
             <div>
-                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Chế độ</h3>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Chế độ tương tác</h3>
                 <div class="flex gap-2">
                     <button id="mode-place" class="mode-btn active flex-1 py-2 px-3 border border-gray-600 rounded bg-gray-700 transition">
                         <i class="fa-solid fa-hand pointer-events-none mb-1 block"></i> Xếp Bi
                     </button>
                     <button id="mode-aim" class="mode-btn flex-1 py-2 px-3 border border-gray-600 rounded bg-gray-700 transition">
-                        <i class="fa-solid fa-crosshairs pointer-events-none mb-1 block"></i> Ngắm & Đánh
+                        <i class="fa-solid fa-eye pointer-events-none mb-1 block"></i> Xem Quỹ Đạo
                     </button>
                 </div>
-
-                <div id="aim-controls" class="hidden mt-3">
-                    <button id="btn-lock-aim" class="w-full py-2 px-3 border border-gray-600 rounded bg-gray-700 hover:bg-gray-600 transition flex items-center justify-center gap-2 text-sm font-medium">
-                        <i class="fa-solid fa-unlock" id="lock-icon"></i> <span id="lock-text">Mở khóa ngắm</span>
-                    </button>
-                </div>
-                
-                <p id="mode-hint" class="text-xs text-gray-400 mt-2 text-center">Kéo thả các bi để xếp vị trí</p>
+                <p id="mode-hint" class="text-xs text-gray-400 mt-2 text-center">Kéo thả các bi để xếp thế bi mong muốn</p>
             </div>
 
             <div>
@@ -130,38 +97,31 @@
                 <div class="flex gap-4 justify-center">
                     <label class="cursor-pointer flex items-center gap-2">
                         <input type="radio" name="cueball" value="0" checked class="form-radio text-blue-500 bg-gray-700 border-gray-600">
-                        <div class="w-6 h-6 rounded-full bg-white shadow-inner border border-gray-300"></div> Bi Trắng
+                        <div class="w-6 h-6 rounded-full bg-white shadow-inner border border-gray-300"></div> Trắng
                     </label>
                     <label class="cursor-pointer flex items-center gap-2">
                         <input type="radio" name="cueball" value="1" class="form-radio text-blue-500 bg-gray-700 border-gray-600">
-                        <div class="w-6 h-6 rounded-full bg-yellow-400 shadow-inner border border-yellow-600"></div> Bi Vàng
+                        <div class="w-6 h-6 rounded-full bg-yellow-400 shadow-inner border border-yellow-600"></div> Vàng
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2">
+                        <input type="radio" name="cueball" value="2" class="form-radio text-blue-500 bg-gray-700 border-gray-600">
+                        <div class="w-6 h-6 rounded-full bg-red-500 shadow-inner border border-red-700"></div> Đỏ
                     </label>
                 </div>
             </div>
 
             <div class="flex flex-col items-center">
-                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 w-full">Điểm chạm (Ép-phê)</h3>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 w-full">Điểm chạm (Ép-phê ngang)</h3>
                 <div id="spin-pad">
                     <div class="crosshair crosshair-v"></div>
                     <div class="crosshair crosshair-h"></div>
                     <div id="spin-dot"></div>
                 </div>
                 <div class="flex justify-between w-full mt-2 text-xs text-gray-400 px-4">
-                    <span>Trái/Phải: <span id="spin-x-val" class="text-white">0</span></span>
-                    <span>Tới/Lùi: <span id="spin-y-val" class="text-white">0</span></span>
+                    <span>Trái/Phải: <span id="spin-x-val" class="text-white">0.00</span></span>
                 </div>
+                <p class="text-xs text-gray-500 text-center mt-2 italic">Chỉ áp dụng ép-phê ngang để tính toán góc nảy băng.</p>
                 <button id="btn-reset-spin" class="mt-2 text-xs text-blue-400 hover:text-blue-300">Đặt lại tâm</button>
-            </div>
-
-            <div id="power-control" class="hidden flex-col gap-2">
-                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">Kéo lực rồi thả ra để đánh</h3>
-                <div class="relative h-10 bg-gray-900 rounded-lg border border-gray-700 overflow-hidden shadow-inner touch-none">
-                    <div id="shoot-fill" class="absolute left-0 top-0 h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 w-0 pointer-events-none"></div>
-                    <input type="range" id="shoot-slider" min="0" max="200" value="0" class="absolute w-full h-full opacity-100 z-10 cursor-pointer touch-none bg-transparent">
-                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                        <span class="text-white/30 text-xs font-bold tracking-widest pointer-events-none">KÉO ĐỂ LẤY LỰC &gt;&gt;</span>
-                    </div>
-                </div>
             </div>
 
         </div>
@@ -176,38 +136,24 @@
         const TABLE_WIDTH = canvas.width - CUSHION_SIZE * 2; 
         const TABLE_HEIGHT = canvas.height - CUSHION_SIZE * 2; 
         const BALL_RADIUS = 13;
-        const FRICTION = 0.985;
         const WALL_RESTITUTION = 0.85;
-        const BALL_RESTITUTION = 0.95;
 
         let mode = 'PLACE'; 
         let cueBallIndex = 0; 
         let isDragging = false;
         let dragBallIndex = -1;
         let aimAngle = 0;
-        let isAimLocked = false; // Biến trạng thái Khóa Ngắm
-        let pullDistance = 0;
-        let maxPullDistance = 200;
-
-        let savedBallsState = [];
         let spinX = 0; 
-        let spinY = 0; 
+        let showCue = false; 
+        let savedBallsState = [];
 
-        // Lớp Bi
         class Ball {
             constructor(x, y, color, id) {
                 this.x = x;
                 this.y = y;
-                this.vx = 0;
-                this.vy = 0;
                 this.color = color;
                 this.radius = BALL_RADIUS;
-                this.mass = 1;
                 this.id = id;
-                this.path = []; 
-                this.spinVx = 0;
-                this.spinVy = 0;
-                this.spinXVal = 0; 
             }
 
             draw() {
@@ -233,84 +179,6 @@
                     ctx.fill();
                 }
             }
-
-            drawPath() {
-                if (this.path.length < 2) return;
-                ctx.beginPath();
-                ctx.moveTo(this.path[0].x, this.path[0].y);
-                for (let i = 1; i < this.path.length; i++) {
-                    ctx.lineTo(this.path[i].x, this.path[i].y);
-                }
-                ctx.strokeStyle = this.id === 0 ? 'rgba(255, 255, 255, 0.4)' : 
-                                  this.id === 1 ? 'rgba(252, 211, 77, 0.4)' : 'rgba(239, 68, 68, 0.4)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-            }
-
-            update() {
-                if (Math.abs(this.vx) < 0.05) this.vx = 0;
-                if (Math.abs(this.vy) < 0.05) this.vy = 0;
-
-                this.vx *= FRICTION;
-                this.vy *= FRICTION;
-
-                if (Math.abs(this.spinVx) > 0.1 || Math.abs(this.spinVy) > 0.1) {
-                    this.vx += (this.spinVx - this.vx) * 0.03;
-                    this.vy += (this.spinVy - this.vy) * 0.03;
-                    this.spinVx *= 0.95; 
-                    this.spinVy *= 0.95;
-                }
-
-                this.x += this.vx;
-                this.y += this.vy;
-
-                if (this.vx !== 0 || this.vy !== 0) {
-                    if (this.path.length === 0) {
-                        this.path.push({x: this.x, y: this.y});
-                    } else {
-                        const lastPoint = this.path[this.path.length - 1];
-                        const dist = Math.hypot(this.x - lastPoint.x, this.y - lastPoint.y);
-                        if (dist > 5) {
-                            this.path.push({x: this.x, y: this.y});
-                        }
-                    }
-                }
-
-                this.checkWallCollision();
-            }
-
-            checkWallCollision() {
-                let hitWall = false;
-                if (this.x - this.radius < CUSHION_SIZE) {
-                    this.x = CUSHION_SIZE + this.radius;
-                    this.vx *= -WALL_RESTITUTION;
-                    this.vy += this.spinXVal * 2 * Math.abs(this.vx); 
-                    hitWall = true;
-                }
-                else if (this.x + this.radius > canvas.width - CUSHION_SIZE) {
-                    this.x = canvas.width - CUSHION_SIZE - this.radius;
-                    this.vx *= -WALL_RESTITUTION;
-                    this.vy -= this.spinXVal * 2 * Math.abs(this.vx);
-                    hitWall = true;
-                }
-                if (this.y - this.radius < CUSHION_SIZE) {
-                    this.y = CUSHION_SIZE + this.radius;
-                    this.vy *= -WALL_RESTITUTION;
-                    this.vx -= this.spinXVal * 2 * Math.abs(this.vy);
-                    hitWall = true;
-                }
-                else if (this.y + this.radius > canvas.height - CUSHION_SIZE) {
-                    this.y = canvas.height - CUSHION_SIZE - this.radius;
-                    this.vy *= -WALL_RESTITUTION;
-                    this.vx += this.spinXVal * 2 * Math.abs(this.vy);
-                    hitWall = true;
-                }
-
-                if (hitWall) {
-                    this.path.push({x: this.x, y: this.y}); 
-                    this.spinXVal *= 0.7; 
-                }
-            }
         }
 
         const balls = [
@@ -322,98 +190,54 @@
         function drawTable() {
             ctx.fillStyle = '#452c1e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.fillStyle = '#1e5631';
             ctx.fillRect(15, 15, canvas.width - 30, canvas.height - 30);
-            
             ctx.fillStyle = '#26733f';
             ctx.fillRect(CUSHION_SIZE, CUSHION_SIZE, TABLE_WIDTH, TABLE_HEIGHT);
-
             ctx.fillStyle = '#d1d5db';
             const drawDiamonds = (x, y) => {
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
             };
-
             for (let i = 1; i < 8; i++) {
                 let dx = CUSHION_SIZE + i * (TABLE_WIDTH / 8);
-                drawDiamonds(dx, CUSHION_SIZE / 2);
-                drawDiamonds(dx, canvas.height - CUSHION_SIZE / 2);
+                drawDiamonds(dx, CUSHION_SIZE / 2); drawDiamonds(dx, canvas.height - CUSHION_SIZE / 2);
             }
             for (let i = 1; i < 4; i++) {
                 let dy = CUSHION_SIZE + i * (TABLE_HEIGHT / 4);
-                drawDiamonds(CUSHION_SIZE / 2, dy);
-                drawDiamonds(canvas.width - CUSHION_SIZE / 2, dy);
+                drawDiamonds(CUSHION_SIZE / 2, dy); drawDiamonds(canvas.width - CUSHION_SIZE / 2, dy);
             }
         }
 
-        function checkBallCollisions() {
+        function separateOverlappingBalls() {
             for (let i = 0; i < balls.length; i++) {
                 for (let j = i + 1; j < balls.length; j++) {
-                    let b1 = balls[i];
-                    let b2 = balls[j];
-                    let dx = b2.x - b1.x;
-                    let dy = b2.y - b1.y;
+                    let b1 = balls[i]; let b2 = balls[j];
+                    let dx = b2.x - b1.x; let dy = b2.y - b1.y;
                     let dist = Math.hypot(dx, dy);
 
                     if (dist < b1.radius + b2.radius) {
-                        let overlap = (b1.radius + b2.radius) - dist;
+                        let overlap = (b1.radius + b2.radius) - dist + 0.5; 
                         let nx = dist === 0 ? 1 : dx / dist;
                         let ny = dist === 0 ? 0 : dy / dist;
-
-                        b1.x -= nx * overlap / 2;
-                        b2.x += nx * overlap / 2;
-                        b1.y -= ny * overlap / 2;
-                        b2.y += ny * overlap / 2;
-
-                        let dvx = b2.vx - b1.vx;
-                        let dvy = b2.vy - b1.vy;
-                        let velAlongNormal = dvx * nx + dvy * ny;
-
-                        if (velAlongNormal > 0) continue;
-
-                        let e = BALL_RESTITUTION;
-                        let jImpulse = -(1 + e) * velAlongNormal;
-                        jImpulse /= (1 / b1.mass + 1 / b2.mass);
-
-                        let impulseX = jImpulse * nx;
-                        let impulseY = jImpulse * ny;
-
-                        b1.vx -= impulseX / b1.mass;
-                        b1.vy -= impulseY / b1.mass;
-                        b2.vx += impulseX / b2.mass;
-                        b2.vy += impulseY / b2.mass;
-
-                        b1.path.push({x: b1.x, y: b1.y});
-                        b2.path.push({x: b2.x, y: b2.y});
-
-                        b2.vx += b1.spinXVal * 0.5 * ny;
-                        b2.vy -= b1.spinXVal * 0.5 * nx;
+                        b1.x -= nx * overlap / 2; b2.x += nx * overlap / 2;
+                        b1.y -= ny * overlap / 2; b2.y += ny * overlap / 2;
                     }
                 }
             }
         }
 
-        function getPredictedPath(startBall, aimAngle, currentSpinX, maxBounces = 6) {
+        function getPredictedPath(startBall, testAngle, currentSpinX, maxBounces = 12) {
             let path = [{x: startBall.x, y: startBall.y, isBounce: false}];
-            let currentX = startBall.x;
-            let currentY = startBall.y;
-            let dirX = Math.cos(aimAngle);
-            let dirY = Math.sin(aimAngle);
+            let currentX = startBall.x; let currentY = startBall.y;
+            let dirX = Math.cos(testAngle); let dirY = Math.sin(testAngle);
             let radius = startBall.radius;
-
-            let bounces = 0;
-            let targetHit = null;
-            let targetDir = null;
-
-            let targetBalls = balls.filter(b => b !== startBall);
+            let bounces = 0; 
+            let hitBallIds = [];
+            let targetBalls = balls.filter(b => b.id !== startBall.id);
             let lastHitBall = null; 
 
             while (bounces < maxBounces) {
-                let minT = Infinity;
-                let hitType = null;
-                let hitObj = null;
+                let minT = Infinity; let hitType = null; let hitObj = null;
 
                 if (dirX > 0) {
                     let t = (canvas.width - CUSHION_SIZE - radius - currentX) / dirX;
@@ -433,33 +257,23 @@
 
                 for (let ball of targetBalls) {
                     if (ball === lastHitBall) continue; 
-
-                    let Lx = ball.x - currentX;
-                    let Ly = ball.y - currentY;
+                    let Lx = ball.x - currentX; let Ly = ball.y - currentY;
                     let tca = Lx * dirX + Ly * dirY; 
                     if (tca < 0) continue; 
-
                     let d2 = (Lx * Lx + Ly * Ly) - tca * tca; 
                     let radiusSum = startBall.radius + ball.radius;
                     if (d2 > radiusSum * radiusSum) continue; 
-
                     let thc = Math.sqrt(radiusSum * radiusSum - d2); 
                     let t0 = tca - thc; 
-                    
-                    if (t0 > 0.1 && t0 < minT) {
-                        minT = t0;
-                        hitType = 'ball';
-                        hitObj = ball;
-                    }
+                    if (t0 > 0.1 && t0 < minT) { minT = t0; hitType = 'ball'; hitObj = ball; }
                 }
 
                 if (minT === Infinity) {
-                    path.push({x: currentX + dirX * 1500, y: currentY + dirY * 1500, isBounce: false});
+                    path.push({x: currentX + dirX * 1000, y: currentY + dirY * 1000, isBounce: false});
                     break; 
                 }
 
-                currentX += dirX * minT;
-                currentY += dirY * minT;
+                currentX += dirX * minT; currentY += dirY * minT;
                 path.push({x: currentX, y: currentY, hitBall: hitType === 'ball', isBounce: true});
 
                 if (hitType === 'wall_v') {
@@ -468,131 +282,90 @@
                     let len = Math.hypot(simVx, simVy);
                     dirX = simVx / len; dirY = simVy / len;
                     bounces++; lastHitBall = null; currentSpinX *= 0.7; 
-                } else if (hitType === 'wall_h') {
+                } 
+                else if (hitType === 'wall_h') {
                     let simVy = dirY * -WALL_RESTITUTION;
                     let simVx = dirX - (currentSpinX * 2 * Math.abs(simVy));
                     let len = Math.hypot(simVx, simVy);
                     dirX = simVx / len; dirY = simVy / len;
                     bounces++; lastHitBall = null; currentSpinX *= 0.7; 
-                } else if (hitType === 'ball') {
-                    if (!targetHit) {
-                        targetHit = hitObj;
-                        let dx = hitObj.x - currentX; let dy = hitObj.y - currentY;
-                        let len = Math.hypot(dx, dy);
-                        targetDir = {x: dx / len, y: dy / len};
-                    }
+                } 
+                else if (hitType === 'ball') {
+                    if (!hitBallIds.includes(hitObj.id)) { hitBallIds.push(hitObj.id); }
+                    if (hitBallIds.length === 2) { break; } // Dừng khi chạm đủ 2 bi
+
                     let dx = hitObj.x - currentX; let dy = hitObj.y - currentY;
                     let len = Math.hypot(dx, dy); let nx = dx / len; let ny = dy / len;
                     let dot = dirX * nx + dirY * ny; dirX = dirX - dot * nx; dirY = dirY - dot * ny;
                     let newLen = Math.hypot(dirX, dirY);
                     if (newLen > 0.01) { dirX /= newLen; dirY /= newLen; } else { break; }
+                    
                     bounces++; lastHitBall = hitObj; 
-                    currentX += dirX * 0.1; currentY += dirY * 0.1;
+                    currentX += dirX * 0.1; currentY += dirY * 0.1; 
                 }
             }
-            return { points: path, targetHit, targetDir };
+            return { points: path, hitBallIds };
         }
 
-        function animate() {
+        function render() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawTable();
 
-            let isMoving = false;
+            separateOverlappingBalls();
+
+            // Ràng buộc bi nằm trong bàn
             balls.forEach(b => {
-                b.update();
-                if (Math.abs(b.vx) > 0 || Math.abs(b.vy) > 0 || Math.abs(b.spinVx) > 0.1) {
-                    isMoving = true;
-                }
+                b.x = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.width - CUSHION_SIZE - b.radius, b.x));
+                b.y = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.height - CUSHION_SIZE - b.radius, b.y));
             });
 
-            checkBallCollisions();
-
-            if (!isMoving && mode === 'SHOOTING') {
-                mode = 'AIM'; 
-                document.getElementById('mode-aim').click();
-            }
-
-            balls.forEach(b => b.drawPath());
             balls.forEach(b => b.draw());
 
-            if (mode === 'AIM') {
+            if (mode === 'AIM' && showCue) {
                 let cueBall = balls[cueBallIndex];
-                let prediction = getPredictedPath(cueBall, aimAngle, spinX, 6); 
+                let prediction = getPredictedPath(cueBall, aimAngle, spinX, 10); 
                 let pathPts = prediction.points;
 
-                ctx.beginPath();
-                ctx.moveTo(pathPts[0].x, pathPts[0].y);
-                for (let i = 1; i < pathPts.length; i++) {
-                    ctx.lineTo(pathPts[i].x, pathPts[i].y);
-                }
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-                ctx.setLineDash([5, 5]);
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-                ctx.setLineDash([]);
+                ctx.beginPath(); ctx.moveTo(pathPts[0].x, pathPts[0].y);
+                for (let i = 1; i < pathPts.length; i++) { ctx.lineTo(pathPts[i].x, pathPts[i].y); }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.setLineDash([5, 5]); ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
 
                 for (let i = 1; i < pathPts.length; i++) {
                     if (pathPts[i].isBounce) {
-                        ctx.beginPath();
-                        ctx.arc(pathPts[i].x, pathPts[i].y, BALL_RADIUS, 0, Math.PI * 2);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
+                        ctx.beginPath(); ctx.arc(pathPts[i].x, pathPts[i].y, BALL_RADIUS, 0, Math.PI * 2);
+                        ctx.strokeStyle = pathPts[i].hitBall ? 'rgba(252, 211, 77, 0.8)' : 'rgba(255, 255, 255, 0.4)';
+                        ctx.lineWidth = 1; ctx.stroke();
                     }
                 }
 
-                if (prediction.targetHit) {
-                    ctx.beginPath();
-                    ctx.moveTo(prediction.targetHit.x, prediction.targetHit.y);
-                    ctx.lineTo(prediction.targetHit.x + prediction.targetDir.x * 60, prediction.targetHit.y + prediction.targetDir.y * 60);
-                    ctx.strokeStyle = prediction.targetHit.id === 1 ? 'rgba(252, 211, 77, 0.6)' : 'rgba(239, 68, 68, 0.6)';
-                    ctx.setLineDash([3, 3]);
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
+                let cueDist = BALL_RADIUS + 20;
+                let cueStartX = cueBall.x - Math.cos(aimAngle) * cueDist;
+                let cueStartY = cueBall.y - Math.sin(aimAngle) * cueDist;
+                let cueEndX = cueBall.x - Math.cos(aimAngle) * (cueDist + 150);
+                let cueEndY = cueBall.y - Math.sin(aimAngle) * (cueDist + 150);
 
-                if (!isMoving) {
-                    let cueDist = BALL_RADIUS + 10 + pullDistance;
-                    let cueStartX = cueBall.x - Math.cos(aimAngle) * cueDist;
-                    let cueStartY = cueBall.y - Math.sin(aimAngle) * cueDist;
-                    let cueEndX = cueBall.x - Math.cos(aimAngle) * (cueDist + 150);
-                    let cueEndY = cueBall.y - Math.sin(aimAngle) * (cueDist + 150);
-
-                    ctx.beginPath();
-                    ctx.moveTo(cueStartX, cueStartY);
-                    ctx.lineTo(cueEndX, cueEndY);
-                    ctx.lineWidth = 4;
-                    let grad = ctx.createLinearGradient(cueStartX, cueStartY, cueEndX, cueEndY);
-                    grad.addColorStop(0, '#a3e635'); 
-                    grad.addColorStop(0.05, '#e5e7eb'); 
-                    grad.addColorStop(0.3, '#fcd34d'); 
-                    grad.addColorStop(1, '#78350f'); 
-                    ctx.strokeStyle = grad;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
-                    ctx.lineCap = 'butt';
-                }
+                ctx.beginPath(); ctx.moveTo(cueStartX, cueStartY); ctx.lineTo(cueEndX, cueEndY);
+                ctx.lineWidth = 4;
+                let grad = ctx.createLinearGradient(cueStartX, cueStartY, cueEndX, cueEndY);
+                grad.addColorStop(0, '#a3e635'); grad.addColorStop(0.05, '#e5e7eb'); 
+                grad.addColorStop(0.3, '#fcd34d'); grad.addColorStop(1, '#78350f'); 
+                ctx.strokeStyle = grad; ctx.lineCap = 'round'; ctx.stroke(); ctx.lineCap = 'butt';
             }
-            requestAnimationFrame(animate);
+            requestAnimationFrame(render);
         }
 
         function getMousePos(evt) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            let clientX = evt.clientX;
-            let clientY = evt.clientY;
-
+            let clientX = evt.clientX; let clientY = evt.clientY;
             if (evt.touches && evt.touches.length > 0) {
-                clientX = evt.touches[0].clientX;
-                clientY = evt.touches[0].clientY;
+                clientX = evt.touches[0].clientX; clientY = evt.touches[0].clientY;
             }
-
             return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
         }
 
-        // --- Xử lý kéo trên bàn (Chỉ dùng cho Xếp bi hoặc Xoay ngắm) ---
         canvas.addEventListener('mousedown', handleStart);
         canvas.addEventListener('touchstart', handleStart, {passive: false});
         window.addEventListener('mousemove', handleMove);
@@ -608,170 +381,78 @@
                 for (let i = balls.length - 1; i >= 0; i--) {
                     let b = balls[i];
                     if (Math.hypot(pos.x - b.x, pos.y - b.y) <= b.radius * 1.5) {
-                        isDragging = true;
-                        dragBallIndex = i;
-                        break;
+                        isDragging = true; dragBallIndex = i; break;
                     }
                 }
+            } else if (mode === 'AIM') {
+                let cueBall = balls[cueBallIndex];
+                aimAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+                showCue = true;
             }
         }
 
         function handleMove(e) {
+            if(e.type === 'touchmove') e.preventDefault(); 
             if (mode === 'PLACE' && isDragging && dragBallIndex !== -1) {
                 const pos = getMousePos(e);
-                let b = balls[dragBallIndex];
-                b.x = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.width - CUSHION_SIZE - b.radius, pos.x));
-                b.y = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.height - CUSHION_SIZE - b.radius, pos.y));
-                b.path = []; 
-            } 
-            else if (mode === 'AIM') {
-                // Nếu chưa khóa ngắm thì di chuột sẽ xoay hướng ngắm
-                if (!isAimLocked) {
-                    const pos = getMousePos(e);
-                    let cueBall = balls[cueBallIndex];
-                    aimAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
-                }
+                balls[dragBallIndex].x = pos.x;
+                balls[dragBallIndex].y = pos.y;
+            } else if (mode === 'AIM' && showCue) {
+                const pos = getMousePos(e);
+                let cueBall = balls[cueBallIndex];
+                aimAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
             }
         }
 
         function handleEnd(e) {
-            if (mode === 'PLACE') {
-                isDragging = false;
-                dragBallIndex = -1;
-            } 
+            if (mode === 'PLACE') { isDragging = false; dragBallIndex = -1; }
         }
 
-        // --- Xử lý Thanh Kéo Lực & Thực Hiện Đánh ---
-        const shootSlider = document.getElementById('shoot-slider');
-        const shootFill = document.getElementById('shoot-fill');
-
-        // Khi đang kéo thanh lực (cập nhật gậy thụt lùi)
-        shootSlider.addEventListener('input', (e) => {
-            pullDistance = parseInt(e.target.value);
-            shootFill.style.width = (pullDistance / maxPullDistance * 100) + '%';
-        });
-
-        // Khi buông thanh lực (Thực hiện cú đánh)
-        shootSlider.addEventListener('change', (e) => {
-            let finalPower = parseInt(e.target.value);
-            let isMoving = balls.some(b => Math.abs(b.vx) > 0.1 || Math.abs(b.vy) > 0.1);
-            
-            // Nếu có lực đủ mạnh (>10) và bi đang đứng yên thì mới đánh
-            if (finalPower > 10 && !isMoving && mode === 'AIM') {
-                shoot(finalPower);
-            }
-            
-            // Reset thanh lực về 0 sau khi thả (hoặc hủy)
-            shootSlider.value = 0;
-            pullDistance = 0;
-            shootFill.style.width = '0%';
-        });
-
-        function shoot(powerRaw) {
-            saveState(); 
-            mode = 'SHOOTING';
-            balls.forEach(b => b.path = []);
-
-            // Lực mạnh nhân 65
-            let power = (powerRaw / maxPullDistance) * 65; 
-            let cueBall = balls[cueBallIndex];
-
-            cueBall.vx = Math.cos(aimAngle) * power;
-            cueBall.vy = Math.sin(aimAngle) * power;
-            cueBall.spinXVal = spinX; 
-            
-            if (spinY !== 0) {
-                let spinPower = power * Math.abs(spinY) * 0.8;
-                let spinDir = spinY < 0 ? aimAngle : aimAngle + Math.PI; 
-                cueBall.spinVx = Math.cos(spinDir) * spinPower;
-                cueBall.spinVy = Math.sin(spinDir) * spinPower;
-            } else {
-                cueBall.spinVx = 0;
-                cueBall.spinVy = 0;
-            }
-        }
-
-        // --- Các Nút Điều Khiển UI ---
+        // --- Nút Công Cụ ---
         function saveState() {
             savedBallsState = balls.map(b => ({x: b.x, y: b.y}));
         }
 
         document.getElementById('btn-undo').addEventListener('click', () => {
             if (savedBallsState.length > 0) {
-                balls.forEach((b, i) => {
-                    b.x = savedBallsState[i].x; b.y = savedBallsState[i].y;
-                    b.vx = 0; b.vy = 0; b.spinVx = 0; b.spinVy = 0; b.path = [];
-                });
-                mode = 'PLACE';
-                document.getElementById('mode-place').click();
+                balls.forEach((b, i) => { b.x = savedBallsState[i].x; b.y = savedBallsState[i].y; });
+                mode = 'PLACE'; document.getElementById('mode-place').click();
+                showCue = false;
             }
         });
 
         document.getElementById('btn-clear-path').addEventListener('click', () => {
-            balls.forEach(b => b.path = []);
+            showCue = false;
         });
 
         const btnPlace = document.getElementById('mode-place');
         const btnAim = document.getElementById('mode-aim');
-        const aimControls = document.getElementById('aim-controls');
-        const powerControl = document.getElementById('power-control');
         const modeHint = document.getElementById('mode-hint');
 
         btnPlace.addEventListener('click', () => {
             mode = 'PLACE';
-            btnPlace.classList.add('active');
-            btnAim.classList.remove('active');
-            aimControls.classList.add('hidden');
-            powerControl.classList.add('hidden');
-            modeHint.textContent = "Kéo thả các bi để xếp vị trí trên bàn";
-            canvas.style.cursor = 'grab';
+            btnPlace.classList.add('active'); btnAim.classList.remove('active');
+            modeHint.textContent = "Kéo thả các bi để xếp thế bi mong muốn";
+            canvas.style.cursor = 'grab'; showCue = false;
         });
 
         btnAim.addEventListener('click', () => {
-            let isMoving = balls.some(b => Math.abs(b.vx) > 0.1 || Math.abs(b.vy) > 0.1);
-            if (isMoving) return; 
-
             mode = 'AIM';
-            btnAim.classList.add('active');
-            btnPlace.classList.remove('active');
-            aimControls.classList.remove('hidden');
-            powerControl.classList.remove('hidden');
-            powerControl.classList.add('flex');
-            modeHint.textContent = "Di chuyển chuột để chọn hướng, bấm Khóa Ngắm, rồi kéo lực để đánh";
+            btnAim.classList.add('active'); btnPlace.classList.remove('active');
+            modeHint.textContent = "Di chuyển chuột xung quanh bi chủ để xoay ngắm và xem quỹ đạo";
             canvas.style.cursor = 'crosshair';
         });
 
-        // Xử lý nút Khóa Ngắm
-        const btnLockAim = document.getElementById('btn-lock-aim');
-        const lockIcon = document.getElementById('lock-icon');
-        const lockText = document.getElementById('lock-text');
-
-        btnLockAim.addEventListener('click', () => {
-            isAimLocked = !isAimLocked;
-            if (isAimLocked) {
-                btnLockAim.classList.replace('bg-gray-700', 'bg-red-600');
-                btnLockAim.classList.replace('hover:bg-gray-600', 'hover:bg-red-500');
-                btnLockAim.classList.replace('border-gray-600', 'border-red-500');
-                lockIcon.classList.replace('fa-unlock', 'fa-lock');
-                lockText.textContent = 'Đã khóa ngắm';
-            } else {
-                btnLockAim.classList.replace('bg-red-600', 'bg-gray-700');
-                btnLockAim.classList.replace('hover:bg-red-500', 'hover:bg-gray-600');
-                btnLockAim.classList.replace('border-red-500', 'border-gray-600');
-                lockIcon.classList.replace('fa-lock', 'fa-unlock');
-                lockText.textContent = 'Mở khóa ngắm';
-            }
-        });
-
         document.querySelectorAll('input[name="cueball"]').forEach(radio => {
-            radio.addEventListener('change', (e) => { cueBallIndex = parseInt(e.target.value); });
+            radio.addEventListener('change', (e) => { 
+                cueBallIndex = parseInt(e.target.value); 
+                showCue = false; 
+            });
         });
 
-        // Xử lý Ép-phê (Spin)
         const spinPad = document.getElementById('spin-pad');
         const spinDot = document.getElementById('spin-dot');
         const valX = document.getElementById('spin-x-val');
-        const valY = document.getElementById('spin-y-val');
         let isSpinDragging = false;
 
         function updateSpin(e) {
@@ -780,13 +461,15 @@
             let clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
             let x = clientX - rect.left - rect.width / 2;
             let y = clientY - rect.top - rect.height / 2;
-            const maxR = 50; 
-            const dist = Math.hypot(x, y);
+            
+            const maxR = 50; const dist = Math.hypot(x, y);
             if (dist > maxR) { x = (x / dist) * maxR; y = (y / dist) * maxR; }
+            y = 0; 
+            
             spinDot.style.left = `${x + rect.width/2}px`;
-            spinDot.style.top = `${y + rect.height/2}px`;
-            spinX = x / maxR; spinY = y / maxR;
-            valX.textContent = spinX.toFixed(2); valY.textContent = spinY.toFixed(2);
+            spinDot.style.top = `50%`;
+            spinX = x / maxR;
+            valX.textContent = spinX.toFixed(2);
         }
 
         spinPad.addEventListener('mousedown', (e) => { isSpinDragging = true; updateSpin(e); });
@@ -797,13 +480,12 @@
         window.addEventListener('touchend', () => { isSpinDragging = false; });
 
         document.getElementById('btn-reset-spin').addEventListener('click', () => {
-            spinX = 0; spinY = 0;
-            spinDot.style.left = '50%'; spinDot.style.top = '50%';
-            valX.textContent = '0.00'; valY.textContent = '0.00';
+            spinX = 0; spinDot.style.left = '50%'; spinDot.style.top = '50%';
+            valX.textContent = '0.00'; 
         });
 
         saveState();
-        requestAnimationFrame(animate);
+        requestAnimationFrame(render);
     </script>
 </body>
 </html>
