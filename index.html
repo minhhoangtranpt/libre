@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô Phỏng Bida Libre Trực Quan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #1a202c; color: #e2e8f0; }
+        #game-container { position: relative; width: 100%; max-width: 1000px; margin: 0 auto; }
+        canvas {
+            background: #2d3748;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border-radius: 8px;
+            cursor: crosshair;
+            width: 100%;
+            height: auto;
+            touch-action: none; /* Ngăn cuộn trang khi vuốt trên canvas */
+        }
+        /* Spin Control (Cục lơ) */
+        #spin-pad {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ffffff, #d1d5db);
+            position: relative;
+            box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2), 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            border: 2px solid #4a5568;
+            touch-action: none;
+        }
+        .crosshair {
+            position: absolute;
+            background: rgba(0,0,0,0.15);
+        }
+        .crosshair-v { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+        .crosshair-h { height: 2px; width: 100%; top: 50%; transform: translateY(-50%); }
+        #spin-dot {
+            width: 14px;
+            height: 14px;
+            background: #ef4444;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            pointer-events: none;
+        }
+        .mode-btn.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-4 font-sans">
+
+    <header class="mb-6 text-center">
+        <h1 class="text-3xl font-bold text-white mb-2"><i class="fa-solid fa-bowling-ball mr-2 text-blue-400"></i> Bida Libre Mô Phỏng</h1>
+        <p class="text-gray-400 text-sm">Tương tác để xếp bi, chỉnh ép-phê và ngắm quỹ đạo đường đi</p>
+    </header>
+
+    <div class="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto w-full">
+        <div class="flex-grow flex flex-col items-center">
+            <div id="game-container">
+                <canvas id="billiard-table" width="1000" height="540"></canvas>
+            </div>
+            <div class="mt-4 flex gap-4 w-full max-w-[1000px] justify-center lg:justify-start">
+                <button id="btn-undo" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                    <i class="fa-solid fa-rotate-left mr-1"></i> Đặt lại bóng
+                </button>
+                <button id="btn-clear-path" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors">
+                    <i class="fa-solid fa-eraser mr-1"></i> Xóa quỹ đạo
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-80 bg-gray-800 rounded-xl p-5 shadow-xl flex flex-col gap-6 flex-shrink-0">
+            
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Chế độ</h3>
+                <div class="flex gap-2">
+                    <button id="mode-place" class="mode-btn active flex-1 py-2 px-3 border border-gray-600 rounded bg-gray-700 transition">
+                        <i class="fa-solid fa-hand pointer-events-none mb-1 block"></i> Xếp Bi
+                    </button>
+                    <button id="mode-aim" class="mode-btn flex-1 py-2 px-3 border border-gray-600 rounded bg-gray-700 transition">
+                        <i class="fa-solid fa-crosshairs pointer-events-none mb-1 block"></i> Ngắm & Đánh
+                    </button>
+                </div>
+                <p id="mode-hint" class="text-xs text-gray-400 mt-2 text-center">Kéo thả các bi để xếp vị trí</p>
+            </div>
+
+            <div>
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Bi chủ (Cue Ball)</h3>
+                <div class="flex gap-4 justify-center">
+                    <label class="cursor-pointer flex items-center gap-2">
+                        <input type="radio" name="cueball" value="0" checked class="form-radio text-blue-500 bg-gray-700 border-gray-600">
+                        <div class="w-6 h-6 rounded-full bg-white shadow-inner border border-gray-300"></div> Bi Trắng
+                    </label>
+                    <label class="cursor-pointer flex items-center gap-2">
+                        <input type="radio" name="cueball" value="1" class="form-radio text-blue-500 bg-gray-700 border-gray-600">
+                        <div class="w-6 h-6 rounded-full bg-yellow-400 shadow-inner border border-yellow-600"></div> Bi Vàng
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3 w-full">Điểm chạm (Ép-phê)</h3>
+                <div id="spin-pad">
+                    <div class="crosshair crosshair-v"></div>
+                    <div class="crosshair crosshair-h"></div>
+                    <div id="spin-dot"></div>
+                </div>
+                <div class="flex justify-between w-full mt-2 text-xs text-gray-400 px-4">
+                    <span>Trái/Phải: <span id="spin-x-val" class="text-white">0</span></span>
+                    <span>Tới/Lùi: <span id="spin-y-val" class="text-white">0</span></span>
+                </div>
+                <button id="btn-reset-spin" class="mt-2 text-xs text-blue-400 hover:text-blue-300">Đặt lại tâm</button>
+            </div>
+
+            <div id="power-display" class="hidden">
+                <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">Lực đánh</h3>
+                <div class="h-4 w-full bg-gray-700 rounded overflow-hidden">
+                    <div id="power-bar" class="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500 w-0 transition-all duration-75"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- CẤU HÌNH CƠ BẢN ---
+        const canvas = document.getElementById('billiard-table');
+        const ctx = canvas.getContext('2d');
+        
+        // Kích thước thật của bàn trên canvas (băng)
+        const CUSHION_SIZE = 40;
+        const TABLE_WIDTH = canvas.width - CUSHION_SIZE * 2; // 920
+        const TABLE_HEIGHT = canvas.height - CUSHION_SIZE * 2; // 460
+        const BALL_RADIUS = 13;
+        const FRICTION = 0.985; // Ma sát bàn
+        const WALL_RESTITUTION = 0.85; // Độ nảy của băng
+        const BALL_RESTITUTION = 0.95; // Độ nảy giữa các bi
+
+        // Biến trạng thái
+        let mode = 'PLACE'; // 'PLACE', 'AIM', 'SHOOTING'
+        let cueBallIndex = 0; // 0: Trắng, 1: Vàng
+        let isDragging = false;
+        let dragBallIndex = -1;
+        let aimAngle = 0;
+        let isPullingCue = false;
+        let pullDistance = 0;
+        let maxPullDistance = 200;
+
+        // Lưu trạng thái trước khi đánh để undo
+        let savedBallsState = [];
+
+        // Trạng thái Ép-phê (từ -1 đến 1)
+        let spinX = 0; // Trái/Phải
+        let spinY = 0; // Cu-lê (âm) / Rết-rô (dương) do canvas Y lộn ngược
+
+        // Lớp Bi
+        class Ball {
+            constructor(x, y, color, id) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.color = color;
+                this.radius = BALL_RADIUS;
+                this.mass = 1;
+                this.id = id;
+                this.path = []; // Lưu quỹ đạo
+                // Vận tốc ảo dùng để tạo hiệu ứng xoáy (cu-lê/rết-rô)
+                this.spinVx = 0;
+                this.spinVy = 0;
+                this.spinXVal = 0; // Giữ giá trị ép-phê ngang để tính toán đập băng
+            }
+
+            draw() {
+                // Đổ bóng
+                ctx.beginPath();
+                ctx.arc(this.x + 3, this.y + 3, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                ctx.fill();
+
+                // Vẽ bi
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                
+                // Điểm sáng tạo độ nổi 3D
+                ctx.beginPath();
+                ctx.arc(this.x - 4, this.y - 4, this.radius * 0.3, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.fill();
+
+                // Đánh dấu bi vàng (thường có chấm đỏ hoặc 2 chấm)
+                if(this.color === '#fcd34d') {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2, 0, Math.PI*2);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fill();
+                }
+            }
+
+            drawPath() {
+                if (this.path.length < 2) return;
+                ctx.beginPath();
+                ctx.moveTo(this.path[0].x, this.path[0].y);
+                for (let i = 1; i < this.path.length; i++) {
+                    ctx.lineTo(this.path[i].x, this.path[i].y);
+                }
+                ctx.strokeStyle = this.id === 0 ? 'rgba(255, 255, 255, 0.4)' : 
+                                  this.id === 1 ? 'rgba(252, 211, 77, 0.4)' : 'rgba(239, 68, 68, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            update() {
+                if (Math.abs(this.vx) < 0.05) this.vx = 0;
+                if (Math.abs(this.vy) < 0.05) this.vy = 0;
+
+                // Áp dụng ma sát
+                this.vx *= FRICTION;
+                this.vy *= FRICTION;
+
+                // Hiệu ứng Cu-lê / Rết-rô: Từ từ chuyển vận tốc xoáy thành vận tốc thật
+                if (Math.abs(this.spinVx) > 0.1 || Math.abs(this.spinVy) > 0.1) {
+                    this.vx += (this.spinVx - this.vx) * 0.03;
+                    this.vy += (this.spinVy - this.vy) * 0.03;
+                    this.spinVx *= 0.95; // Ma sát làm giảm độ xoáy
+                    this.spinVy *= 0.95;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Lưu quỹ đạo (cứ mỗi đoạn nhỏ hoặc đổi hướng)
+                if (this.vx !== 0 || this.vy !== 0) {
+                    if (this.path.length === 0) {
+                        this.path.push({x: this.x, y: this.y});
+                    } else {
+                        const lastPoint = this.path[this.path.length - 1];
+                        const dist = Math.hypot(this.x - lastPoint.x, this.y - lastPoint.y);
+                        if (dist > 5) {
+                            this.path.push({x: this.x, y: this.y});
+                        }
+                    }
+                }
+
+                this.checkWallCollision();
+            }
+
+            checkWallCollision() {
+                let hitWall = false;
+                // Băng trái
+                if (this.x - this.radius < CUSHION_SIZE) {
+                    this.x = CUSHION_SIZE + this.radius;
+                    this.vx *= -WALL_RESTITUTION;
+                    // Ép phê ngang đập băng làm thay đổi góc nảy (vy bị ảnh hưởng)
+                    this.vy += this.spinXVal * 2 * Math.abs(this.vx); 
+                    hitWall = true;
+                }
+                // Băng phải
+                else if (this.x + this.radius > canvas.width - CUSHION_SIZE) {
+                    this.x = canvas.width - CUSHION_SIZE - this.radius;
+                    this.vx *= -WALL_RESTITUTION;
+                    this.vy -= this.spinXVal * 2 * Math.abs(this.vx);
+                    hitWall = true;
+                }
+                // Băng trên
+                if (this.y - this.radius < CUSHION_SIZE) {
+                    this.y = CUSHION_SIZE + this.radius;
+                    this.vy *= -WALL_RESTITUTION;
+                    // Ép phê ngang đập băng ngang làm thay đổi vx
+                    this.vx -= this.spinXVal * 2 * Math.abs(this.vy);
+                    hitWall = true;
+                }
+                // Băng dưới
+                else if (this.y + this.radius > canvas.height - CUSHION_SIZE) {
+                    this.y = canvas.height - CUSHION_SIZE - this.radius;
+                    this.vy *= -WALL_RESTITUTION;
+                    this.vx += this.spinXVal * 2 * Math.abs(this.vy);
+                    hitWall = true;
+                }
+
+                if (hitWall) {
+                    this.path.push({x: this.x, y: this.y}); // Đánh dấu góc nảy rõ ràng
+                    this.spinXVal *= 0.7; // Giảm ép-phê sau khi đập băng
+                }
+            }
+        }
+
+        // Khởi tạo 3 bi (Trắng, Vàng, Đỏ)
+        const balls = [
+            new Ball(300, canvas.height / 2, '#ffffff', 0), // Trắng
+            new Ball(canvas.width - 300, canvas.height / 2 + 50, '#fcd34d', 1), // Vàng
+            new Ball(canvas.width - 300, canvas.height / 2 - 50, '#ef4444', 2) // Đỏ
+        ];
+
+        // --- HÀM VẼ GIAO DIỆN BÀN ---
+        function drawTable() {
+            // Viền gỗ
+            ctx.fillStyle = '#452c1e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Băng cao su (màu xanh đậm hơn)
+            ctx.fillStyle = '#1e5631';
+            ctx.fillRect(15, 15, canvas.width - 30, canvas.height - 30);
+            
+            // Mặt bàn (Lòng chảo)
+            ctx.fillStyle = '#26733f';
+            ctx.fillRect(CUSHION_SIZE, CUSHION_SIZE, TABLE_WIDTH, TABLE_HEIGHT);
+
+            // Vẽ kim cương (chấm trên thành gỗ)
+            ctx.fillStyle = '#d1d5db';
+            const drawDiamonds = (x, y) => {
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            };
+
+            // Kim cương băng dài (chia 8 phần)
+            for (let i = 1; i < 8; i++) {
+                let dx = CUSHION_SIZE + i * (TABLE_WIDTH / 8);
+                drawDiamonds(dx, CUSHION_SIZE / 2);
+                drawDiamonds(dx, canvas.height - CUSHION_SIZE / 2);
+            }
+            // Kim cương băng ngắn (chia 4 phần)
+            for (let i = 1; i < 4; i++) {
+                let dy = CUSHION_SIZE + i * (TABLE_HEIGHT / 4);
+                drawDiamonds(CUSHION_SIZE / 2, dy);
+                drawDiamonds(canvas.width - CUSHION_SIZE / 2, dy);
+            }
+        }
+
+        // --- XỬ LÝ VA CHẠM BI VỚI BI ---
+        function checkBallCollisions() {
+            for (let i = 0; i < balls.length; i++) {
+                for (let j = i + 1; j < balls.length; j++) {
+                    let b1 = balls[i];
+                    let b2 = balls[j];
+                    let dx = b2.x - b1.x;
+                    let dy = b2.y - b1.y;
+                    let dist = Math.hypot(dx, dy);
+
+                    if (dist < b1.radius + b2.radius) {
+                        // Tách 2 bi ra để không bị dính (Penetration resolution)
+                        let overlap = (b1.radius + b2.radius) - dist;
+                        let nx = dist === 0 ? 1 : dx / dist;
+                        let ny = dist === 0 ? 0 : dy / dist;
+
+                        b1.x -= nx * overlap / 2;
+                        b2.x += nx * overlap / 2;
+                        b1.y -= ny * overlap / 2;
+                        b2.y += ny * overlap / 2;
+
+                        // Tính toán vận tốc tương đối
+                        let dvx = b2.vx - b1.vx;
+                        let dvy = b2.vy - b1.vy;
+                        let velAlongNormal = dvx * nx + dvy * ny;
+
+                        // Nếu đang tách ra thì bỏ qua
+                        if (velAlongNormal > 0) continue;
+
+                        // Hệ số nảy
+                        let e = BALL_RESTITUTION;
+                        let jImpulse = -(1 + e) * velAlongNormal;
+                        jImpulse /= (1 / b1.mass + 1 / b2.mass);
+
+                        let impulseX = jImpulse * nx;
+                        let impulseY = jImpulse * ny;
+
+                        b1.vx -= impulseX / b1.mass;
+                        b1.vy -= impulseY / b1.mass;
+                        b2.vx += impulseX / b2.mass;
+                        b2.vy += impulseY / b2.mass;
+
+                        // Ghi lại điểm gãy khúc quỹ đạo
+                        b1.path.push({x: b1.x, y: b1.y});
+                        b2.path.push({x: b2.x, y: b2.y});
+
+                        // Truyền ép-phê nhẹ sang bi kia (Throw effect) - giả lập đơn giản
+                        b2.vx += b1.spinXVal * 0.5 * ny;
+                        b2.vy -= b1.spinXVal * 0.5 * nx;
+                    }
+                }
+            }
+        }
+
+        // --- HÀM TÍNH TOÁN QUỸ ĐẠO DỰ ĐOÁN (TIA NGẮM) ---
+        function getPredictedPath(startBall, aimAngle, currentSpinX, maxBounces = 6) {
+            let path = [{x: startBall.x, y: startBall.y, isBounce: false}];
+            let currentX = startBall.x;
+            let currentY = startBall.y;
+            let dirX = Math.cos(aimAngle);
+            let dirY = Math.sin(aimAngle);
+            let radius = startBall.radius;
+
+            let bounces = 0;
+            let targetHit = null;
+            let targetDir = null;
+
+            // Bỏ qua bóng chủ trong mảng kiểm tra
+            let targetBalls = balls.filter(b => b !== startBall);
+            let lastHitBall = null; // Lưu lại bi vừa chạm để không tính va chạm đúp
+
+            while (bounces < maxBounces) {
+                let minT = Infinity;
+                let hitType = null;
+                let hitObj = null;
+
+                // 1. Kiểm tra va chạm với Băng (Tường)
+                if (dirX > 0) {
+                    let t = (canvas.width - CUSHION_SIZE - radius - currentX) / dirX;
+                    if (t > 0.01 && t < minT) { minT = t; hitType = 'wall_v'; }
+                } else if (dirX < 0) {
+                    let t = (CUSHION_SIZE + radius - currentX) / dirX;
+                    if (t > 0.01 && t < minT) { minT = t; hitType = 'wall_v'; }
+                }
+                
+                if (dirY > 0) {
+                    let t = (canvas.height - CUSHION_SIZE - radius - currentY) / dirY;
+                    if (t > 0.01 && t < minT) { minT = t; hitType = 'wall_h'; }
+                } else if (dirY < 0) {
+                    let t = (CUSHION_SIZE + radius - currentY) / dirY;
+                    if (t > 0.01 && t < minT) { minT = t; hitType = 'wall_h'; }
+                }
+
+                // 2. Kiểm tra va chạm với Bi khác
+                for (let ball of targetBalls) {
+                    if (ball === lastHitBall) continue; // Bỏ qua bi vừa chạm tức thì
+
+                    let Lx = ball.x - currentX;
+                    let Ly = ball.y - currentY;
+                    let tca = Lx * dirX + Ly * dirY; 
+                    if (tca < 0) continue; // Bi đang nằm ở phía sau hướng ngắm
+
+                    let d2 = (Lx * Lx + Ly * Ly) - tca * tca; 
+                    let radiusSum = startBall.radius + ball.radius;
+                    if (d2 > radiusSum * radiusSum) continue; // Tia ngắm trượt qua bi
+
+                    let thc = Math.sqrt(radiusSum * radiusSum - d2); 
+                    let t0 = tca - thc; 
+                    
+                    if (t0 > 0.1 && t0 < minT) {
+                        minT = t0;
+                        hitType = 'ball';
+                        hitObj = ball;
+                    }
+                }
+
+                if (minT === Infinity) {
+                    // Không chạm gì nữa, kéo dài tia ra khoảng không
+                    path.push({x: currentX + dirX * 1500, y: currentY + dirY * 1500, isBounce: false});
+                    break; 
+                }
+
+                // Cập nhật vị trí bóng ma (ghost ball)
+                currentX += dirX * minT;
+                currentY += dirY * minT;
+                path.push({x: currentX, y: currentY, hitBall: hitType === 'ball', isBounce: true});
+
+                // Xử lý góc nảy & dạt bi
+                if (hitType === 'wall_v') {
+                    // Tính toán thay đổi góc nảy do ép-phê ngang (Left/Right Spin)
+                    let simVx = dirX * -WALL_RESTITUTION;
+                    let simVy = dirY + (currentSpinX * 2 * Math.abs(simVx));
+                    let len = Math.hypot(simVx, simVy);
+                    dirX = simVx / len;
+                    dirY = simVy / len;
+
+                    bounces++;
+                    lastHitBall = null;
+                    currentSpinX *= 0.7; // Ép-phê giảm dần sau mỗi lần nảy băng
+                } else if (hitType === 'wall_h') {
+                    // Tính toán thay đổi góc nảy do ép-phê ngang
+                    let simVy = dirY * -WALL_RESTITUTION;
+                    let simVx = dirX - (currentSpinX * 2 * Math.abs(simVy));
+                    let len = Math.hypot(simVx, simVy);
+                    dirX = simVx / len;
+                    dirY = simVy / len;
+                    
+                    bounces++;
+                    lastHitBall = null;
+                    currentSpinX *= 0.7; // Ép-phê giảm dần sau mỗi lần nảy băng
+                } else if (hitType === 'ball') {
+                    if (!targetHit) {
+                        // Chỉ lưu thông tin bi đầu tiên chạm để vẽ tia dạt mục tiêu
+                        targetHit = hitObj;
+                        let dx = hitObj.x - currentX;
+                        let dy = hitObj.y - currentY;
+                        let len = Math.hypot(dx, dy);
+                        targetDir = {x: dx / len, y: dy / len};
+                    }
+
+                    // Tính toán hướng dạt của bi chủ (tiếp tuyến 90 độ)
+                    let dx = hitObj.x - currentX;
+                    let dy = hitObj.y - currentY;
+                    let len = Math.hypot(dx, dy);
+                    let nx = dx / len;
+                    let ny = dy / len;
+                    
+                    let dot = dirX * nx + dirY * ny;
+                    dirX = dirX - dot * nx;
+                    dirY = dirY - dot * ny;
+                    
+                    let newLen = Math.hypot(dirX, dirY);
+                    if (newLen > 0.01) {
+                        dirX /= newLen; 
+                        dirY /= newLen;
+                    } else {
+                        // Trường hợp chạm full trái (đầu bi), bi chủ đứng im tại chỗ theo hình học
+                        break;
+                    }
+                    
+                    bounces++;
+                    lastHitBall = hitObj; // Đánh dấu bi vừa chạm
+                    
+                    // Nhích vector vị trí tới 1 chút theo hướng mới để tránh kẹt va chạm lặp lại ở vòng lặp sau
+                    currentX += dirX * 0.1;
+                    currentY += dirY * 0.1;
+                }
+            }
+            
+            return { points: path, targetHit, targetDir };
+        }
+
+        // --- VÒNG LẶP CHÍNH ---
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawTable();
+
+            // Cập nhật logic nếu đang lăn
+            let isMoving = false;
+            balls.forEach(b => {
+                b.update();
+                if (Math.abs(b.vx) > 0 || Math.abs(b.vy) > 0 || Math.abs(b.spinVx) > 0.1) {
+                    isMoving = true;
+                }
+            });
+
+            checkBallCollisions();
+
+            if (!isMoving && mode === 'SHOOTING') {
+                mode = 'AIM'; // Quét xong chuyển về ngắm
+                document.getElementById('mode-aim').click();
+            }
+
+            // Vẽ đường đi
+            balls.forEach(b => b.drawPath());
+
+            // Vẽ bi
+            balls.forEach(b => b.draw());
+
+            // Vẽ các thành phần tương tác
+            if (mode === 'AIM') {
+                let cueBall = balls[cueBallIndex];
+                
+                // Vẽ quỹ đạo dự đoán (Tia ngắm & Bóng ma), truyền thêm chỉ số ép-phê hiện tại (spinX)
+                let prediction = getPredictedPath(cueBall, aimAngle, spinX, 6); // Tăng maxBounces lên 6
+                let pathPts = prediction.points;
+
+                // 1. Vẽ đường ngắm đứt nét
+                ctx.beginPath();
+                ctx.moveTo(pathPts[0].x, pathPts[0].y);
+                for (let i = 1; i < pathPts.length; i++) {
+                    ctx.lineTo(pathPts[i].x, pathPts[i].y);
+                }
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.setLineDash([5, 5]);
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // 2. Vẽ điểm chạm (Ghost Ball)
+                for (let i = 1; i < pathPts.length; i++) {
+                    if (pathPts[i].isBounce) {
+                        ctx.beginPath();
+                        ctx.arc(pathPts[i].x, pathPts[i].y, BALL_RADIUS, 0, Math.PI * 2);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                }
+
+                // 3. Vẽ hướng dạt của bi mục tiêu nếu có va chạm (chỉ áp dụng bi chạm đầu tiên)
+                if (prediction.targetHit) {
+                    ctx.beginPath();
+                    ctx.moveTo(prediction.targetHit.x, prediction.targetHit.y);
+                    ctx.lineTo(prediction.targetHit.x + prediction.targetDir.x * 60, prediction.targetHit.y + prediction.targetDir.y * 60);
+                    ctx.strokeStyle = prediction.targetHit.id === 1 ? 'rgba(252, 211, 77, 0.6)' : 'rgba(239, 68, 68, 0.6)';
+                    ctx.setLineDash([3, 3]);
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // Vẽ cơ (Gậy)
+                if (!isMoving) {
+                    let cueDist = BALL_RADIUS + 10 + pullDistance;
+                    let cueStartX = cueBall.x - Math.cos(aimAngle) * cueDist;
+                    let cueStartY = cueBall.y - Math.sin(aimAngle) * cueDist;
+                    let cueEndX = cueBall.x - Math.cos(aimAngle) * (cueDist + 150);
+                    let cueEndY = cueBall.y - Math.sin(aimAngle) * (cueDist + 150);
+
+                    ctx.beginPath();
+                    ctx.moveTo(cueStartX, cueStartY);
+                    ctx.lineTo(cueEndX, cueEndY);
+                    ctx.lineWidth = 4;
+                    // Gradient cho gậy
+                    let grad = ctx.createLinearGradient(cueStartX, cueStartY, cueEndX, cueEndY);
+                    grad.addColorStop(0, '#a3e635'); // Ngọn cơ lơ
+                    grad.addColorStop(0.05, '#e5e7eb'); // Ngọn cơ trắng
+                    grad.addColorStop(0.3, '#fcd34d'); // Gỗ sáng
+                    grad.addColorStop(1, '#78350f'); // Gỗ tối
+                    ctx.strokeStyle = grad;
+                    ctx.lineCap = 'round';
+                    ctx.stroke();
+                    ctx.lineCap = 'butt';
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // --- XỬ LÝ SỰ KIỆN CHUỘT / CẢM ỨNG TRÊN CANVAS ---
+        function getMousePos(evt) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            let clientX = evt.clientX;
+            let clientY = evt.clientY;
+
+            if (evt.touches && evt.touches.length > 0) {
+                clientX = evt.touches[0].clientX;
+                clientY = evt.touches[0].clientY;
+            }
+
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        canvas.addEventListener('mousedown', handleStart);
+        canvas.addEventListener('touchstart', handleStart, {passive: false});
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('touchmove', handleMove, {passive: false});
+        window.addEventListener('mouseup', handleEnd);
+        window.addEventListener('touchend', handleEnd);
+
+        function handleStart(e) {
+            if(e.type === 'touchstart') e.preventDefault();
+            const pos = getMousePos(e);
+
+            if (mode === 'PLACE') {
+                for (let i = balls.length - 1; i >= 0; i--) {
+                    let b = balls[i];
+                    if (Math.hypot(pos.x - b.x, pos.y - b.y) <= b.radius * 1.5) {
+                        isDragging = true;
+                        dragBallIndex = i;
+                        break;
+                    }
+                }
+            } else if (mode === 'AIM') {
+                let cueBall = balls[cueBallIndex];
+                isPullingCue = true;
+                // Tính góc ngắm ban đầu
+                aimAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+                pullDistance = 0;
+            }
+        }
+
+        function handleMove(e) {
+            if (mode === 'PLACE' && isDragging && dragBallIndex !== -1) {
+                const pos = getMousePos(e);
+                let b = balls[dragBallIndex];
+                // Giới hạn trong bàn
+                b.x = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.width - CUSHION_SIZE - b.radius, pos.x));
+                b.y = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.height - CUSHION_SIZE - b.radius, pos.y));
+                b.path = []; // Xóa đường đi cũ khi xếp lại
+            } 
+            else if (mode === 'AIM') {
+                const pos = getMousePos(e);
+                let cueBall = balls[cueBallIndex];
+                
+                if (isPullingCue) {
+                    // Chế độ kéo cơ (để đánh)
+                    let currentAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+                    // Khoảng cách từ chuột đến bi chủ
+                    let dist = Math.hypot(pos.x - cueBall.x, pos.y - cueBall.y);
+                    
+                    // Tính lực kéo ngược lại với hướng ngắm
+                    // Góc kéo ngược lại hướng ngắm là aimAngle + Math.PI
+                    let pullAngle = aimAngle + Math.PI;
+                    // Chiếu vector chuột lên vector kéo cơ
+                    let relativeAngle = currentAngle - pullAngle;
+                    let projection = dist * Math.cos(relativeAngle);
+                    
+                    if (projection > 0) {
+                        pullDistance = Math.min(maxPullDistance, projection);
+                    } else {
+                        pullDistance = 0;
+                        // Cập nhật hướng ngắm nếu chuột đưa lên trước
+                        aimAngle = currentAngle;
+                    }
+                    updatePowerUI();
+                } else {
+                    // Chỉ xoay hướng
+                    aimAngle = Math.atan2(pos.y - cueBall.y, pos.x - cueBall.x);
+                }
+            }
+        }
+
+        function handleEnd(e) {
+            if (mode === 'PLACE') {
+                isDragging = false;
+                dragBallIndex = -1;
+            } 
+            else if (mode === 'AIM' && isPullingCue) {
+                isPullingCue = false;
+                if (pullDistance > 10) {
+                    shoot(pullDistance);
+                }
+                pullDistance = 0;
+                updatePowerUI();
+            }
+        }
+
+        function shoot(powerRaw) {
+            saveState(); // Lưu trạng thái để undo
+            mode = 'SHOOTING';
+            
+            // Xóa path cũ
+            balls.forEach(b => b.path = []);
+
+            let power = (powerRaw / maxPullDistance) * 35; // Chỉnh hệ số lực
+            let cueBall = balls[cueBallIndex];
+
+            // Vận tốc trực tiếp
+            cueBall.vx = Math.cos(aimAngle) * power;
+            cueBall.vy = Math.sin(aimAngle) * power;
+
+            // Truyền thông số ép-phê
+            cueBall.spinXVal = spinX; // Lưu lực xoay ngang để tính khi đập băng
+            
+            // Cu-lê / Rết-rô (Follow/Draw)
+            // Nếu spinY < 0 (đánh phía trên bi - Cu-lê): bi có xu hướng lao tới theo hướng aimAngle
+            // Nếu spinY > 0 (đánh phía dưới bi - Rết-rô): bi có xu hướng giật lùi
+            if (spinY !== 0) {
+                // Vector vận tốc ảo
+                let spinPower = power * Math.abs(spinY) * 0.8;
+                let spinDir = spinY < 0 ? aimAngle : aimAngle + Math.PI; // Tới hoặc lùi
+                cueBall.spinVx = Math.cos(spinDir) * spinPower;
+                cueBall.spinVy = Math.sin(spinDir) * spinPower;
+            } else {
+                cueBall.spinVx = 0;
+                cueBall.spinVy = 0;
+            }
+        }
+
+        function updatePowerUI() {
+            const pb = document.getElementById('power-bar');
+            let pct = (pullDistance / maxPullDistance) * 100;
+            pb.style.width = `${pct}%`;
+        }
+
+        // --- XỬ LÝ LƯU/PHỤC HỒI TRẠNG THÁI ---
+        function saveState() {
+            savedBallsState = balls.map(b => ({x: b.x, y: b.y}));
+        }
+
+        document.getElementById('btn-undo').addEventListener('click', () => {
+            if (savedBallsState.length > 0) {
+                balls.forEach((b, i) => {
+                    b.x = savedBallsState[i].x;
+                    b.y = savedBallsState[i].y;
+                    b.vx = 0; b.vy = 0;
+                    b.spinVx = 0; b.spinVy = 0;
+                    b.path = [];
+                });
+                mode = 'PLACE';
+                document.getElementById('mode-place').click();
+            }
+        });
+
+        document.getElementById('btn-clear-path').addEventListener('click', () => {
+            balls.forEach(b => b.path = []);
+        });
+
+        // --- XỬ LÝ UI CHUỘT / SPIN ---
+        const btnPlace = document.getElementById('mode-place');
+        const btnAim = document.getElementById('mode-aim');
+        const powerDisplay = document.getElementById('power-display');
+        const modeHint = document.getElementById('mode-hint');
+
+        btnPlace.addEventListener('click', () => {
+            mode = 'PLACE';
+            btnPlace.classList.add('active');
+            btnAim.classList.remove('active');
+            powerDisplay.classList.add('hidden');
+            modeHint.textContent = "Kéo thả các bi để xếp vị trí trên bàn";
+            canvas.style.cursor = 'grab';
+        });
+
+        btnAim.addEventListener('click', () => {
+            let isMoving = balls.some(b => Math.abs(b.vx) > 0.1 || Math.abs(b.vy) > 0.1);
+            if (isMoving) return; // Đang chạy thì không cho ngắm
+
+            mode = 'AIM';
+            btnAim.classList.add('active');
+            btnPlace.classList.remove('active');
+            powerDisplay.classList.remove('hidden');
+            modeHint.textContent = "Kéo chuột từ bi chủ ra xa để chỉnh lực và đánh";
+            canvas.style.cursor = 'crosshair';
+        });
+
+        // Chọn bi chủ
+        document.querySelectorAll('input[name="cueball"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                cueBallIndex = parseInt(e.target.value);
+            });
+        });
+
+        // Xử lý nút Spin (Ép-phê)
+        const spinPad = document.getElementById('spin-pad');
+        const spinDot = document.getElementById('spin-dot');
+        const valX = document.getElementById('spin-x-val');
+        const valY = document.getElementById('spin-y-val');
+        let isSpinDragging = false;
+
+        function updateSpin(e) {
+            const rect = spinPad.getBoundingClientRect();
+            let clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+            let clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+            
+            let x = clientX - rect.left - rect.width / 2;
+            let y = clientY - rect.top - rect.height / 2;
+            
+            // Ràng buộc trong vòng tròn r=60
+            const maxR = 50; 
+            const dist = Math.hypot(x, y);
+            if (dist > maxR) {
+                x = (x / dist) * maxR;
+                y = (y / dist) * maxR;
+            }
+
+            spinDot.style.left = `${x + rect.width/2}px`;
+            spinDot.style.top = `${y + rect.height/2}px`;
+
+            spinX = x / maxR;
+            spinY = y / maxR;
+
+            valX.textContent = spinX.toFixed(2);
+            valY.textContent = spinY.toFixed(2);
+        }
+
+        spinPad.addEventListener('mousedown', (e) => { isSpinDragging = true; updateSpin(e); });
+        spinPad.addEventListener('touchstart', (e) => { isSpinDragging = true; updateSpin(e); e.preventDefault(); });
+        window.addEventListener('mousemove', (e) => { if (isSpinDragging) updateSpin(e); });
+        window.addEventListener('touchmove', (e) => { if (isSpinDragging) updateSpin(e); });
+        window.addEventListener('mouseup', () => { isSpinDragging = false; });
+        window.addEventListener('touchend', () => { isSpinDragging = false; });
+
+        document.getElementById('btn-reset-spin').addEventListener('click', () => {
+            spinX = 0; spinY = 0;
+            spinDot.style.left = '50%';
+            spinDot.style.top = '50%';
+            valX.textContent = '0.00';
+            valY.textContent = '0.00';
+        });
+
+        // Khởi động
+        saveState();
+        requestAnimationFrame(animate);
+
+    </script>
+</body>
+</html>
