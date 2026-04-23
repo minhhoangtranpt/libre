@@ -276,23 +276,26 @@
                 currentX += dirX * minT; currentY += dirY * minT;
                 path.push({x: currentX, y: currentY, hitBall: hitType === 'ball', isBounce: true});
 
+                // TÍNH TOÁN ÉP-PHÊ ĐÃ SỬA LỖI
                 if (hitType === 'wall_v') {
+                    // Băng ngắn (trái/phải): Dùng dấu '+'
                     let simVx = dirX * -WALL_RESTITUTION;
-                    let simVy = dirY + (currentSpinX * 2 * Math.abs(simVx));
+                    let simVy = dirY + (Math.sign(dirX) * currentSpinX * 2 * Math.abs(simVx));
                     let len = Math.hypot(simVx, simVy);
                     dirX = simVx / len; dirY = simVy / len;
                     bounces++; lastHitBall = null; currentSpinX *= 0.7; 
                 } 
                 else if (hitType === 'wall_h') {
+                    // Băng dài (trên/dưới): Dùng dấu '-'
                     let simVy = dirY * -WALL_RESTITUTION;
-                    let simVx = dirX - (currentSpinX * 2 * Math.abs(simVy));
+                    let simVx = dirX - (Math.sign(dirY) * currentSpinX * 2 * Math.abs(simVy));
                     let len = Math.hypot(simVx, simVy);
                     dirX = simVx / len; dirY = simVy / len;
                     bounces++; lastHitBall = null; currentSpinX *= 0.7; 
                 } 
                 else if (hitType === 'ball') {
                     if (!hitBallIds.includes(hitObj.id)) { hitBallIds.push(hitObj.id); }
-                    if (hitBallIds.length === 2) { break; } // Dừng khi chạm đủ 2 bi
+                    if (hitBallIds.length === 2) { break; } 
 
                     let dx = hitObj.x - currentX; let dy = hitObj.y - currentY;
                     let len = Math.hypot(dx, dy); let nx = dx / len; let ny = dy / len;
@@ -313,7 +316,6 @@
 
             separateOverlappingBalls();
 
-            // Ràng buộc bi nằm trong bàn
             balls.forEach(b => {
                 b.x = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.width - CUSHION_SIZE - b.radius, b.x));
                 b.y = Math.max(CUSHION_SIZE + b.radius, Math.min(canvas.height - CUSHION_SIZE - b.radius, b.y));
